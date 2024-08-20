@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Image Gallery</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container-fluid {
+            padding: 0 15px;
+        }
+        .image-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .image-grid .card {
+            position: relative;
+            flex: 1 1 calc(25% - 10px);
+            box-sizing: border-box;
+            height: 0;
+            padding-bottom: 25%; /* 正方形にするためのトリック */
+        }
+        .image-grid .card img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 縦横比の小さい方をフィットさせる */
+            cursor: pointer;
+        }
+        .form-check {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .modal-dialog {
+            max-width: 90%;
+        }
+        .modal-body {
+            display: flex;
+            justify-content: center;
+        }
+        .modal-body img {
+            max-width: 100%;
+            max-height: 80vh; /* 画面内に収まるように最大高さを設定 */
+            height: auto;
+        }
+        .delete-button-container {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="container-fluid mt-4">
+    <div class="delete-button-container">
+        <form id="delete-form" action="/delete" method="post">
+            <button type="submit" class="btn btn-danger">Delete Selected</button>
+        </form>
+    </div>
+    <h1 class="mb-4">AI Image Gallery</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data" class="mb-4">
+        <div class="form-group">
+            <input type="file" name="file" class="form-control-file">
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+    <h2 class="mb-4">Uploaded Images</h2>
+    <div class="image-grid">
+        <% blobs.forEach(function(blob) { %>
+        <div class="card">
+            <img src="<%= blob.url %>" alt="<%= blob.name %>" data-toggle="modal" data-target="#imageModal" data-url="<%= blob.url %>">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="blob_names" form="delete-form" value="<%= blob.name %>">
+            </div>
+        </div>
+        <% }); %>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <img src="" id="modalImage" alt="Expanded image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $('#imageModal').on('show.bs.modal', function (event) {
+            var img = $(event.relatedTarget);
+            var url = img.data('url');
+            var modal = $(this);
+            modal.find('#modalImage').attr('src', url);
+        });
+    </script>
+</body>
+</html>
