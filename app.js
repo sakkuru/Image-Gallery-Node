@@ -5,15 +5,19 @@ const dotenv = require('dotenv');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { format, addHours } = require('date-fns');
+const { TableClient } = require('@azure/data-tables');
 
 dotenv.config();
 
 const app = express();
 const upload = multer();
 
-// Azure Blob Storageの設定
+app.use(express.urlencoded({ extended: true }));
+
+// Azure Storageの設定
 const connectStr = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
+const tableName = "LikesTable";
 
 if (!connectStr || !containerName) {
     console.error("Error: Azure Storage connection string or container name not found");
@@ -22,10 +26,14 @@ if (!connectStr || !containerName) {
 
 let blobServiceClient;
 let containerClient;
+let tableClient;
 
 try {
     blobServiceClient = BlobServiceClient.fromConnectionString(connectStr);
     containerClient = blobServiceClient.getContainerClient(containerName);
+    tableClient = TableClient.fromConnectionString(connectStr, tableName);
+    
+
 } catch (error) {
     console.error(`Error connecting to Azure Blob Storage: ${error.message}`);
     process.exit(1);
@@ -54,11 +62,25 @@ app.get('/', async (req, res) => {
         for await (const blob of containerClient.listBlobsFlat()) {
             blobs.push(blob);
         }
-        blobs.sort((a, b) => b.properties.createdOn - a.properties.createdOn);
-        const blobUrls = blobs.map(blob => ({
-            name: blob.name,
-            url: getBlobUrl(blob.name)
-        }));
+
+        const blobUrls = [];
+        for (const blob of blobs) {
+            let likes = 0;
+            try {
+                const entity = await tableClient.getEntity('Likes', blob.name);
+                likes = parseInt(entity.likes);
+            } catch (error) {
+                if (error.statusCode !== 404) {
+                    throw error;
+                }
+            }
+            blobUrls.push({
+                name: blob.name,
+                url: getBlobUrl(blob.name),
+                likes: likes
+            });
+        }
+
         res.render('index', { blobs: blobUrls });
     } catch (error) {
         res.send(`Error retrieving blobs: ${error.message}`);
@@ -84,7 +106,10 @@ app.post('/upload', upload.single('file'), async (req, res) => {
 
 app.post('/delete', async (req, res) => {
     console.log("Handling delete route");
-    const blobNames = req.body.blob_names;
+    let blobNames = req.body.blob_names;
+    if (!Array.isArray(blobNames)) {
+        blobNames = [blobNames];
+    }
     try {
         for (const blobName of blobNames) {
             const blockBlobClient = containerClient.getBlockBlobClient(blobName);
@@ -96,6 +121,35 @@ app.post('/delete', async (req, res) => {
     }
     res.redirect('/');
 });
+
+app.post('/like/:blobName', async (req, res) => {
+    const blobName = req.params.blobName;
+    console.log("Like!", blobName);
+
+    try {
+        // エンティティの取得または作成
+        let entity;
+        try {
+            entity = await tableClient.getEntity('Likes', blobName);
+            entity.likes = parseInt(entity.likes) + 1;
+        } catch (error) {
+            if (error.statusCode === 404) {
+                entity = { partitionKey: 'Likes', rowKey: blobName, likes: 1 };
+            } else {
+                throw error;
+            }
+        }
+
+        // エンティティをアップサート
+        await tableClient.upsertEntity(entity);
+
+        res.json({ success: true, likes: entity.likes });
+    } catch (error) {
+        console.error(`Error updating likes for ${blobName}: ${error.message}`);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 
 const PORT = process.env.PORT || 3000;
 
