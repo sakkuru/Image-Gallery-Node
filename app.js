@@ -70,7 +70,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     const file = req.file;
     if (file) {
         const filename = path.basename(file.originalname);
-        const uniqueFilename = `${uuidv4()}_${filename}`;
+        const uniqueFilename = `${uuidv4()}`;
         try {
             const blockBlobClient = containerClient.getBlockBlobClient(uniqueFilename);
             await blockBlobClient.uploadData(file.buffer);
