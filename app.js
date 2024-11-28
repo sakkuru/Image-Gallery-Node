@@ -94,8 +94,8 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     console.log("Handling upload route");
     const file = req.file;
     if (file) {
-        const filename = path.basename(file.originalname);
-        const uniqueFilename = `${uuidv4()}`;
+        const extension = path.extname(file.originalname); // 元のファイル名から拡張子を取得
+        const uniqueFilename = `${uuidv4()}${extension}`; // 拡張子を新しいファイル名に付与
         try {
             const blockBlobClient = containerClient.getBlockBlobClient(uniqueFilename);
             await blockBlobClient.uploadData(file.buffer);
