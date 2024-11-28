@@ -13,6 +13,9 @@ const app = express();
 const upload = multer();
 
 app.use(express.urlencoded({ extended: true }));
+app.use('/styles', express.static(path.join(__dirname, 'public/styles')));
+app.use('/scripts', express.static(path.join(__dirname, 'public/scripts')));
+
 
 // Azure Storageの設定
 const connectStr = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -41,7 +44,7 @@ try {
 
 function getBlobUrl(blobName) {
     const now = new Date();
-    const expiryTime = addHours(now, 1);
+    const expiryTime = addHours(now, 10);
     const sasToken = generateBlobSASQueryParameters({
         containerName: containerName,
         blobName: blobName,
