@@ -72,3 +72,34 @@
     right: 10px;
     z-index: 1000;
 }
+
+/* 非表示にする */
+.custom-file-input {
+    display: none;
+}
+
+/* カスタマイズ用のラベル */
+.custom-file-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+/* ラベルのデザイン */
+.custom-file-wrapper label {
+    cursor: pointer;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+.custom-file-wrapper label:hover {
+    background-color: #e2e6ea;
+}
+
+/* 選択したファイル名を表示 */
+#file-name {
+    font-size: 14px;
+    color: #555;
+}
