@@ -66,6 +66,9 @@ app.get('/', async (req, res) => {
             blobs.push(blob);
         }
 
+        // 名前順でソート
+        blobs.sort((a, b) => b.name.localeCompare(a.name));
+
         const blobUrls = [];
         for (const blob of blobs) {
             let likes = 0;
@@ -94,8 +97,10 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     console.log("Handling upload route");
     const file = req.file;
     if (file) {
-        const extension = path.extname(file.originalname); // 元のファイル名から拡張子を取得
-        const uniqueFilename = `${uuidv4()}${extension}`; // 拡張子を新しいファイル名に付与
+        const extension = path.extname(file.originalname);
+        const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, ''); // タイムスタンプ
+        const uniqueFilename = `${timestamp}_${uuidv4()}${extension}`; // タイムスタンプ付きファイル名
+
         try {
             const blockBlobClient = containerClient.getBlockBlobClient(uniqueFilename);
             await blockBlobClient.uploadData(file.buffer);
