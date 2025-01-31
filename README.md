@@ -1,0 +1,8 @@
+
+
+.envサンプル
+```
+AZURE_STORAGE_ACCOUNT_NAME=imggallerystore
+AZURE_STORAGE_CONTAINER_NAME=image0125
+PORT=3000
+```
