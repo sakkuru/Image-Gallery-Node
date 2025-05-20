@@ -18,6 +18,11 @@ Entra ID (Managed Identity) による認証を利用し、ファイルのアッ�
 
 1. このリポジトリをクローン
 
+```bash
+git clone https://github.com/sakkuru/Image-Gallery-Node.git
+cd Image-Gallery-Node
+```
+
 2. デプロイスクリプトを実行
 
 ```bash
