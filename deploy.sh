@@ -33,7 +33,7 @@ echo "[4/9] App Service プラン作成"
 az appservice plan create \
   --name $PLAN_NAME \
   --resource-group $RESOURCE_GROUP \
-  --sku B1 \
+  --sku P1v3 \
   --is-linux
 
 echo "[5/9] Web アプリ作成"
